@@ -36,7 +36,6 @@ formLogin.addEventListener('submit',async(e)=>{
             areaErrorMessage.innerHTML = 'Usuario o Contraseña Invalidos'
         }
        
-        
     }
         
 })

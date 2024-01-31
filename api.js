@@ -1,6 +1,7 @@
 
 const apiBase = 'http://localhost:8000/api'
 const areaErrorMessage = document.querySelector('#errors')
+const areaErrorMessageUpdate = document.querySelector('#errorsUpdate')
 const buscador = document.querySelector('#buscador')
 const formUpdate = document.querySelector('#formUpdate')
 const closeSecionBn = document.querySelector('#salir')
@@ -20,7 +21,7 @@ buscador.addEventListener('keyup', (e) => {
     if (buscador.value.length <= 0) {
         getTareas()
     }
-    
+
 })
 
 //instancia de axios
@@ -113,23 +114,39 @@ const deleteTask = async (id) => {
 //formulariode update
 formUpdate.addEventListener('submit',async(e)=>{
     e.preventDefault()
+    try{
+        const formUserUpdate = new FormData(formUpdate)
+        console.log(formUserUpdate.get('task_name'))
+        let taskData = {}
+        taskData.task_name = formUserUpdate.get('task_name')
+        taskData.task_description = formUserUpdate.get('task_description')
+       
+    
+        const { data } = await apiTask.put(`task/${localStorage.getItem('id-update')}`,taskData)
+        console.log(data)
+        if(data.error === false){
+            getTareas()
+            formCreate.style.display = 'block'
+            formUpdate.style.display = 'none'
 
-    const formUserUpdate = new FormData(formUpdate)
-    console.log(formUserUpdate.get('task_name'))
-    let taskData = {}
-    taskData.task_name = formUserUpdate.get('task_name')
-    taskData.task_description = formUserUpdate.get('task_description')
-    console.log(taskData)
-
-    const { data } = await apiTask.put(`task/${localStorage.getItem('auth-token')}`,taskData)
-    console.log(data)
-    getTareas()
-
+        } 
+        if(data.success === false){
+            console.log("campos requeridos")
+            areaErrorMessageUpdate.style.display = 'block'
+            areaErrorMessageUpdate.classList.remove('alert-success')
+            areaErrorMessageUpdate.classList.add('alert-danger');
+            areaErrorMessageUpdate.innerHTML = 'El titulo es requerido'
+             
+        }
+    }catch(err){
+        console.log("error ",err)
+    }
     
 
 })
 
 
+//obtiene el usuario y llena el formulario
 const updateTask = async (id) => {
 
     formCreate.style.display = "none"
@@ -138,15 +155,17 @@ const updateTask = async (id) => {
     try {
 
         const { data: { data } } = await apiTask.get(`/task/${id}`)
+
         const inputTitle = document.querySelector('#taskTitleUpdate')
-        const textArea   = document.querySelector('#taskDescriptionUpdate').value = (!data.task_description)? '': data.task_description
+        const textArea   = document.querySelector('#taskDescriptionUpdate') 
+        
         inputTitle.value = data.task_name
-        textArea.value   = data.task_description
+        textArea.value   = (!data.task_description)? '': data.task_description
         // inputTitle.setAttribute("id", data.id);
         localStorage.setItem('id-update',data.id)
-    
+        console.log('ok')
     } catch (err) {
-        console.log(err)
+        console.log("eerr",err)
     }
 
 }
@@ -182,7 +201,7 @@ const crearTarea = async () => {
 const saveUpdate = async (task,id) => {
     try {
         const { data } = await apiTask.put(`task/${id}`,task)
-        console.log(data)
+        
         if (data.error == false) {
             areaErrorMessage.classList.remove('alert-danger')
             areaErrorMessage.classList.add('alert-success');
@@ -197,6 +216,10 @@ const saveUpdate = async (task,id) => {
             areaErrorMessage.classList.add('alert-danger');
             areaErrorMessage.innerHTML = 'El titulo es requerido'
         }
+
+        getTareas()
+        formCreate.style.display = "none"
+        formUpdate.style.display = 'block'
     } catch (err) {
         console.log(err)
     }
